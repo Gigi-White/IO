@@ -18,12 +18,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Archive.Zip", "Archive.Zip\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Archive.Zip.UnitTests", "Archive.Zip.UnitTests\Archive.Zip.UnitTests.csproj", "{1C9474C1-0069-404B-A514-0411C2752B75}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "nukeBuild", "nukeBuild\nukeBuild.csproj", "{671A8CB9-8823-4853-8D42-E265CD0C94C9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{671A8CB9-8823-4853-8D42-E265CD0C94C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{671A8CB9-8823-4853-8D42-E265CD0C94C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5952119C-365A-4614-BD29-58EAB1139438}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5952119C-365A-4614-BD29-58EAB1139438}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5952119C-365A-4614-BD29-58EAB1139438}.Release|Any CPU.ActiveCfg = Release|Any CPU

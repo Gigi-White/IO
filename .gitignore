@@ -192,3 +192,5 @@ remotion.snk
 
 # Named
 GitExtensions.settings.backup
+
+.nuke/temp
