@@ -73,8 +73,12 @@
             "enum": [
               "Clean",
               "Compile",
+              "NugetTest",
+              "Publish",
               "Restore",
-              "Test"
+              "RunUnitTests",
+              "Test",
+              "Update"
             ]
           }
         },
@@ -90,8 +94,12 @@
             "enum": [
               "Clean",
               "Compile",
+              "NugetTest",
+              "Publish",
               "Restore",
-              "Test"
+              "RunUnitTests",
+              "Test",
+              "Update"
             ]
           }
         },
