@@ -71,8 +71,8 @@
           "items": {
             "type": "string",
             "enum": [
+              "BuildUnitTests",
               "Clean",
-              "Compile",
               "NugetTest",
               "Publish",
               "Restore",
@@ -92,8 +92,8 @@
           "items": {
             "type": "string",
             "enum": [
+              "BuildUnitTests",
               "Clean",
-              "Compile",
               "NugetTest",
               "Publish",
               "Restore",

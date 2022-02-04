@@ -29,7 +29,8 @@ class Build : NukeBuild
     ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
     ///   - Microsoft VSCode           https://nuke.build/vscode
 
-    public static int Main () => Execute<Build> (x => x.Compile);
+    public static int Main () => Execute<Build> (
+            x => x.RunUnitTests);
 
     [Parameter ("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
@@ -55,7 +56,7 @@ class Build : NukeBuild
     //TestsDirectory.GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
     EnsureCleanDirectory(OutputDirectory);
 
-});
+    });
 
     Target NugetTest => _ => _.Executes (() =>
     {
@@ -75,13 +76,37 @@ class Build : NukeBuild
             packageExecutable: "nunit3-console.exe")]
     readonly Tool Nunit;
 
-    Target RunUnitTests => _ => _.Executes(() =>
+    string TestOutputPath => RootDirectory + "/testOutput";
+
+    Target BuildUnitTests => _ => _.Executes (() =>
     {
-        String NunitParams = $".";
+        TestsDirectories.ForEach (path =>
+                {
+                    var outputs = MSBuild (s => s
+                            .SetTargetPath (Solution)
+                            .SetTargets ("Rebuild")
+                            .SetConfiguration (Configuration)
+                            .SetNodeReuse (IsLocalBuild)
+                            .SetOutDir (TestOutputPath)
+
+                    );
+            Serilog.Log.Write(0, "Output GGGG: "+outputs.StdToText());
+            
+        }
+        );
+    });
+
+    Target RunUnitTests => _ => _
+            .DependsOn (BuildUnitTests)
+            .Executes(() =>
+    {
+        
+        string nUnitParams = $"{TestOutputPath}/Remotion.IO.UnitTests.dll";
         TestsDirectories.ForEach(path =>
         {
-            Nunit(NunitParams, path);
+            Nunit(nUnitParams, path);
         });
+        
     });
 
     Target Test => _ => _
