@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using GlobExpressions;
 using JetBrains.Annotations;
 using Microsoft.Build.Tasks;
 using Nuke.Common;
@@ -29,10 +30,10 @@ class Build : NukeBuild
     ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
     ///   - Microsoft VSCode           https://nuke.build/vscode
 
-    public static int Main () => Execute<Build> (
+    public static int Main() => Execute<Build>(
             x => x.RunUnitTests);
 
-    [Parameter ("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
+    [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
     [Solution] readonly Solution Solution;
@@ -40,7 +41,7 @@ class Build : NukeBuild
     [GitVersion] readonly GitVersion GitVersion;
 
     //AbsolutePath SourceDirectory => RootDirectory / "source";
-    List<AbsolutePath> SourceDirectories => new() { RootDirectory / "Archive.Zip", RootDirectory / "Core",  };
+    List<AbsolutePath> SourceDirectories => new() { RootDirectory / "Archive.Zip", RootDirectory / "Core", };
     List<AbsolutePath> TestsDirectories => new() { RootDirectory / "Archive.Zip.UnitTests", RootDirectory / "UnitTests", };
     AbsolutePath OutputDirectory => RootDirectory / "output";
 
@@ -51,76 +52,83 @@ class Build : NukeBuild
     .Executes(() =>
     {
         Serilog.Log.Write(0, "Second Hello!");
-        SourceDirectories.ForEach (x=>x.GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory));
-    //SourceDirectoryGlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
-    //TestsDirectory.GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
-    EnsureCleanDirectory(OutputDirectory);
+        SourceDirectories.ForEach(x => x.GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory));
+        //SourceDirectoryGlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
+        //TestsDirectory.GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
+        EnsureCleanDirectory(OutputDirectory);
 
     });
 
-    Target NugetTest => _ => _.Executes (() =>
-    {
-        
-        NugetDirectories.ForEach (path =>
-        {
-            MSBuild(s => s
-                    .SetTargetPath(path)
-                    .SetTargets("Pack")
-                    .SetPackageOutputPath (RootDirectory + "/outputNuget")
-            );
-        });
-    });
+    Target NugetTest => _ => _.Executes(() =>
+   {
+
+       NugetDirectories.ForEach(path =>
+       {
+           MSBuild(s => s
+                   .SetTargetPath(path)
+                   .SetTargets("Pack")
+                   .SetPackageOutputPath(RootDirectory + "/outputNuget")
+           );
+       });
+   });
 
     [PackageExecutable(
             packageId: "nunit.consolerunner",
             packageExecutable: "nunit3-console.exe")]
     readonly Tool Nunit;
 
-    string TestOutputPath => RootDirectory + "/testOutput";
+    //string TestOutputPath => RootDirectory + "/testOutput";
+    AbsolutePath TestOutputPath => RootDirectory / "testOutput";
+    Target BuildUnitTests => _ => _.Executes(() =>
+   {
+       TestsDirectories.ForEach(path =>
+               {
+                   var outputs = MSBuild(s => s
+                           .SetTargetPath(path)
+                           .SetTargets("Rebuild")
+                           .SetConfiguration(Configuration)
+                           .SetNodeReuse(IsLocalBuild)
+                           .SetOutDir(TestOutputPath)
 
-    Target BuildUnitTests => _ => _.Executes (() =>
-    {
-        TestsDirectories.ForEach (path =>
-                {
-                    var outputs = MSBuild (s => s
-                            .SetTargetPath (Solution)
-                            .SetTargets ("Rebuild")
-                            .SetConfiguration (Configuration)
-                            .SetNodeReuse (IsLocalBuild)
-                            .SetOutDir (TestOutputPath)
+                   );
+                   Serilog.Log.Write(0, "Output GGGG: " + outputs.StdToText());
 
-                    );
-            Serilog.Log.Write(0, "Output GGGG: "+outputs.StdToText());
-            
-        }
-        );
-    });
+               }
+       );
+   });
+
+    string TestDllPattern = "*.UnitTests.dll";
 
     Target RunUnitTests => _ => _
-            .DependsOn (BuildUnitTests)
+            .DependsOn(BuildUnitTests)
             .Executes(() =>
-    {
-        
-        string nUnitParams = $"{TestOutputPath}/Remotion.IO.UnitTests.dll";
-        TestsDirectories.ForEach(path =>
-        {
-            Nunit(nUnitParams, path);
-        });
-        
-    });
+            {
+                //Change to dynamic
+                var files = Glob.Files(TestOutputPath, TestDllPattern);
+                foreach (var file in files)
+                {
+                    Serilog.Log.Write(0, file);
+
+                }
+
+                Serilog.Log.Write (0, string.Join (";", files));
+
+                Nunit(string.Join(" ", files), TestOutputPath);
+
+                });
 
     Target Test => _ => _
-            .Executes (() =>
-            {
-                Serilog.Log.Write (0, "Hello World!");
-                Serilog.Log.Write (0, RootDirectory + " / ");
-                ScheduledTargets.ForEach (x =>
-                {
-                    Serilog.Log.Write (Serilog.Events.LogEventLevel.Debug, x.ToString() + "");
-                });
-                
-                
-            });
+            .Executes(() =>
+           {
+               Serilog.Log.Write(0, "Hello World!");
+               Serilog.Log.Write(0, RootDirectory + " / ");
+               ScheduledTargets.ForEach(x =>
+               {
+                   Serilog.Log.Write(Serilog.Events.LogEventLevel.Debug, x.ToString() + "");
+               });
+
+
+           });
 
     Target Restore => _ => _
         .Executes(() =>
@@ -131,7 +139,7 @@ class Build : NukeBuild
         });
 
     Target Compile => _ => _
-        .DependsOn(Restore,Test,Clean)
+        .DependsOn(Restore, Test, Clean)
         .Executes(() =>
         {
             MSBuild(s => s
@@ -147,7 +155,7 @@ class Build : NukeBuild
     Target Publish => _ => _
             .Executes(() =>
             {
-                
+
             });
 
     Target Update => _ => _
